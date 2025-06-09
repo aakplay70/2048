@@ -1,35 +1,68 @@
-const grid = document.querySelector('.grid-container');
-const scoreElement = document.getElementById('score');
-const bestScoreElement = document.getElementById('best');
-const gameMessage = document.querySelector('.game-message');
-const restartButton = document.querySelector('.restart-button');
+// Import game logic functions
+import { 
+    mergeTiles,
+    performMove
+} from './gameLogic.js';
+
+
+// Game variables
 
 let score = 0;
 let bestScore = localStorage.getItem('bestScore') || 0;
 let gameWon = false;
 
-// Initialize game
-initializeGame();
+// DOM elements
+let gridContainer;
+let scoreElement;
+let bestScoreElement;
+let gameMessage;
+let restartButton;
 
-// Event Listeners
-window.addEventListener('keydown', handleKeyPress);
-restartButton.addEventListener('click', initializeGame);
+let listenersAttached = false;
+
+// Export for testing
+export { 
+    initializeGame, 
+    addNewTile, 
+    moveTiles,
+    performMove,
+    mergeTiles, 
+    checkGameState 
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeGame();
+});
 
 function initializeGame() {
+    // Query DOM elements every time initializeGame is called, as DOM might be reset (especially in tests)
+    gridContainer = document.querySelector('.grid-container');
+    scoreElement = document.getElementById('score');
+    bestScoreElement = document.getElementById('best');
+    gameMessage = document.querySelector('.game-message');
+    restartButton = document.querySelector('.retry-button');
+
+    // Attach event listeners only once
+    if (!listenersAttached) {
+        window.addEventListener('keydown', handleKeyPress);
+        restartButton.addEventListener('click', initializeGame);
+        listenersAttached = true;
+    }
+
     score = 0;
     scoreElement.textContent = score;
     bestScoreElement.textContent = bestScore;
     gameWon = false;
     
     // Clear existing tiles
-    grid.innerHTML = '';
+    gridContainer.innerHTML = '';
     
     // Create empty grid
     for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 4; j++) {
             const cell = document.createElement('div');
             cell.className = 'grid-cell';
-            grid.appendChild(cell);
+            gridContainer.appendChild(cell);
         }
     }
     
@@ -76,7 +109,7 @@ function handleKeyPress(e) {
 function moveTiles(direction) {
     const cells = Array.from(document.querySelectorAll('.grid-cell'));
     const matrix = cells.map(cell => cell.querySelector('.tile')?.textContent || '0');
-    const newMatrix = performMove(matrix, direction);
+    const { newMatrix, scoreChange } = performMove(matrix, direction);
     
     if (matrix.join('') === newMatrix.join('')) return;
     
@@ -103,7 +136,7 @@ function moveTiles(direction) {
     addNewTile();
     
     // Update score
-    score += calculateScoreChange(matrix, newMatrix);
+    score += scoreChange;
     scoreElement.textContent = score;
     
     // Update best score
@@ -113,109 +146,15 @@ function moveTiles(direction) {
         localStorage.setItem('bestScore', bestScore);
     }
     
-    // Check game state
+    // Check for win condition
+    if (newMatrix.some(tile => tile === '2048') && !gameWon) {
+        gameWon = true;
+        gameMessage.querySelector('p').textContent = 'You Won!';
+        gameMessage.style.display = 'flex';
+    }
+    
+    // Check game over condition
     checkGameState();
-}
-
-function performMove(matrix, direction) {
-    const size = 4;
-    const newMatrix = [...matrix];
-    
-    switch (direction) {
-        case 'up':
-            for (let col = 0; col < size; col++) {
-                const column = [];
-                for (let row = 0; row < size; row++) {
-                    column.push(matrix[row * size + col]);
-                }
-                const merged = mergeTiles(column);
-                for (let row = 0; row < size; row++) {
-                    newMatrix[row * size + col] = merged[row];
-                }
-            }
-            break;
-            
-        case 'down':
-            for (let col = 0; col < size; col++) {
-                const column = [];
-                for (let row = 0; row < size; row++) {
-                    column.push(matrix[(size - 1 - row) * size + col]);
-                }
-                const merged = mergeTiles(column);
-                for (let row = 0; row < size; row++) {
-                    newMatrix[(size - 1 - row) * size + col] = merged[row];
-                }
-            }
-            break;
-            
-        case 'left':
-            for (let row = 0; row < size; row++) {
-                const merged = mergeTiles(matrix.slice(row * size, (row + 1) * size));
-                for (let col = 0; col < size; col++) {
-                    newMatrix[row * size + col] = merged[col];
-                }
-            }
-            break;
-            
-        case 'right':
-            for (let row = 0; row < size; row++) {
-                const merged = mergeTiles(matrix.slice(row * size, (row + 1) * size).reverse());
-                for (let col = 0; col < size; col++) {
-                    newMatrix[row * size + (size - 1 - col)] = merged[col];
-                }
-            }
-            break;
-    }
-    
-    return newMatrix;
-}
-
-function mergeTiles(tiles) {
-    const result = [];
-    let skip = false;
-    
-    tiles.forEach((tile, i) => {
-        if (skip) {
-            skip = false;
-            return;
-        }
-        
-        if (tile === '0') return;
-        
-        if (i < tiles.length - 1 && tile === tiles[i + 1]) {
-            result.push((parseInt(tile) * 2).toString());
-            skip = true;
-            if (parseInt(tile) * 2 === 2048 && !gameWon) {
-                gameWon = true;
-                gameMessage.querySelector('p').textContent = 'You Won!';
-                gameMessage.style.display = 'flex';
-            }
-        } else {
-            result.push(tile);
-        }
-    });
-    
-    while (result.length < tiles.length) {
-        result.push('0');
-    }
-    
-    return result;
-}
-
-function calculateScoreChange(oldMatrix, newMatrix) {
-    let scoreChange = 0;
-    
-    for (let i = 0; i < oldMatrix.length; i++) {
-        if (oldMatrix[i] !== newMatrix[i] && newMatrix[i] !== '0') {
-            const oldValue = parseInt(oldMatrix[i]) || 0;
-            const newValue = parseInt(newMatrix[i]);
-            if (newValue > oldValue) {
-                scoreChange += newValue;
-            }
-        }
-    }
-    
-    return scoreChange;
 }
 
 function checkGameState() {
