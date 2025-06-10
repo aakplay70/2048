@@ -33,25 +33,27 @@ h1 {
 
 .game-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around; /* Changed from space-between */
     align-items: center;
     width: 500px; /* Match grid-container width */
     margin: 0 auto 15px auto; /* Center and add margin below */
+    gap: 10px; /* Added gap for spacing between items */
 }
 
 .score-container, .best-container {
     background: #bbada0;
     color: #f9f6f2;
-    padding: 10px 15px;
+    padding: 8px 12px; /* Adjusted padding */
     border-radius: 3px;
-    font-size: 25px;
+    font-size: 22px; /* Adjusted font size for main number */
     font-weight: bold;
     text-align: center;
-    min-width: 100px; /* Ensure consistent width */
+    min-width: 80px; /* Adjusted min-width */
+    flex-grow: 1; /* Allow them to grow */
 }
 
 .score-container div, .best-container div {
-    font-size: 18px;
+    font-size: 14px; /* Adjusted font size for 'Score:' text */
     font-weight: normal;
     opacity: 0.8;
 }
@@ -151,22 +153,26 @@ h1 {
     padding: 0 20px;
 }
 
-.restart-game-button {
+.game-button {
     display: inline-block;
     background: #8f7a66;
     border-radius: 3px;
-    padding: 0 20px;
+    padding: 8px 12px; /* Adjusted padding */
     text-decoration: none;
     color: #f9f6f2;
-    height: 40px;
-    line-height: 42px;
     cursor: pointer;
     border: none;
     font-weight: bold;
-    font-size: 18px;
+    font-size: 16px; /* Adjusted font size */
+    flex-grow: 1; /* Allow them to grow */
+    text-align: center; /* Center text in button */
 }
 
-.restart-game-button:hover {
+.game-button:hover {
     background: #9f8b7a;
 }
+
+
+
+
 
