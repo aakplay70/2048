@@ -31,9 +31,29 @@ h1 {
     margin-top: 10px;
 }
 
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 500px; /* Match grid-container width */
+    margin: 0 auto 15px auto; /* Center and add margin below */
+}
+
 .score-container, .best-container {
+    background: #bbada0;
+    color: #f9f6f2;
+    padding: 10px 15px;
+    border-radius: 3px;
     font-size: 25px;
-    color: #776e65;
+    font-weight: bold;
+    text-align: center;
+    min-width: 100px; /* Ensure consistent width */
+}
+
+.score-container div, .best-container div {
+    font-size: 18px;
+    font-weight: normal;
+    opacity: 0.8;
 }
 
 .grid-container {
@@ -129,10 +149,24 @@ h1 {
     background: #8f7a66;
     border-radius: 3px;
     padding: 0 20px;
+}
+
+.restart-game-button {
+    display: inline-block;
+    background: #8f7a66;
+    border-radius: 3px;
+    padding: 0 20px;
     text-decoration: none;
     color: #f9f6f2;
     height: 40px;
     line-height: 42px;
-    margin-left: 9px;
     cursor: pointer;
+    border: none;
+    font-weight: bold;
+    font-size: 18px;
 }
+
+.restart-game-button:hover {
+    background: #9f8b7a;
+}
+

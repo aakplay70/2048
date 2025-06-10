@@ -16,7 +16,8 @@ let gridContainer;
 let scoreElement;
 let bestScoreElement;
 let gameMessage;
-let restartButton;
+let retryButton;
+let alwaysVisibleRestartButton;
 
 let listenersAttached = false;
 
@@ -40,12 +41,14 @@ function initializeGame() {
     scoreElement = document.getElementById('score');
     bestScoreElement = document.getElementById('best');
     gameMessage = document.querySelector('.game-message');
-    restartButton = document.querySelector('.retry-button');
+    retryButton = document.querySelector('.retry-button');
+    alwaysVisibleRestartButton = document.querySelector('.restart-game-button');
 
     // Attach event listeners only once
     if (!listenersAttached) {
         window.addEventListener('keydown', handleKeyPress);
-        restartButton.addEventListener('click', initializeGame);
+        retryButton.addEventListener('click', initializeGame);
+        alwaysVisibleRestartButton.addEventListener('click', initializeGame);
         listenersAttached = true;
     }
 
@@ -128,6 +131,7 @@ function moveTiles(direction) {
                 cell.appendChild(newTile);
             } else {
                 tile.textContent = value;
+                tile.className = `tile tile-${value}`;
             }
         }
     });

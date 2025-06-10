@@ -57,14 +57,21 @@ const createGrid = (values) => {
 beforeEach(() => {
   // Reset the DOM
   document.body.innerHTML = `
-    <div class="grid-container"></div>
-    <div id="score">0</div>
-    <div id="best">0</div>
-    <div class="game-message">
-      <p></p>
-      <div class="lower">
-        <a class="retry-button">Try again</a>
-      </div>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="score-container">
+                <div>Score: <span id="score">0</span></div>
+            </div>
+            <div class="best-container">
+                <div>Best: <span id="best">0</span></div>
+            </div>
+            <button class="restart-game-button">Restart Game</button>
+        </div>
+        <div class="game-message">
+            <p></p>
+            <button class="retry-button">New Game</button>
+        </div>
+        <div class="grid-container"></div>
     </div>
   `;
   
