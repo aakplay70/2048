@@ -1,8 +1,8 @@
 body {
     margin: 0;
     padding: 0;
-    background: #faf8ef;
-    color: #776e65;
+    background: #fdf6e3; /* Light cream/off-white */
+    color: #586e75; /* Dark slate grey */
     font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
     font-size: 18px;
 }
@@ -33,27 +33,27 @@ h1 {
 
 .game-header {
     display: flex;
-    justify-content: space-around; /* Changed from space-between */
+    justify-content: space-around;
     align-items: center;
-    width: 500px; /* Match grid-container width */
-    margin: 0 auto 15px auto; /* Center and add margin below */
-    gap: 10px; /* Added gap for spacing between items */
+    width: 500px;
+    margin: 0 auto 15px auto;
+    gap: 10px;
 }
 
 .score-container, .best-container {
-    background: #bbada0;
-    color: #f9f6f2;
-    padding: 8px 12px; /* Adjusted padding */
+    background: #839496; /* Darker grey for containers */
+    color: #fdf6e3; /* Light cream text */
+    padding: 8px 12px;
     border-radius: 3px;
-    font-size: 22px; /* Adjusted font size for main number */
+    font-size: 22px;
     font-weight: bold;
     text-align: center;
-    min-width: 80px; /* Adjusted min-width */
-    flex-grow: 1; /* Allow them to grow */
+    min-width: 80px;
+    flex-grow: 1;
 }
 
 .score-container div, .best-container div {
-    font-size: 14px; /* Adjusted font size for 'Score:' text */
+    font-size: 14px;
     font-weight: normal;
     opacity: 0.8;
 }
@@ -64,7 +64,7 @@ h1 {
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(4, 1fr);
     gap: 15px;
-    background: #bbada0;
+    background: #93a1a1; /* Medium grey for grid background */
     border-radius: 6px;
     width: 500px;
     height: 500px;
@@ -76,7 +76,7 @@ h1 {
 .grid-cell {
     width: 100%;
     height: 100%;
-    background: rgba(238, 228, 218, 0.35);
+    background: #eee8d5; /* Lighter cream for empty cells */
     border-radius: 3px;
     position: relative;
     box-sizing: border-box;
@@ -90,7 +90,7 @@ h1 {
     left: -8px;
     right: -8px;
     bottom: -8px;
-    border: 2px solid #bbada0;
+    border: 2px solid #93a1a1; /* Match grid background */
     border-radius: 6px;
     z-index: -1;
 }
@@ -110,17 +110,20 @@ h1 {
     transition: all 0.3s ease;
 }
 
-.tile-2 { background: #eee4da; color: #776e65; }
+/* Modern Tile Colors */
+.tile-2 { background: #eee4da; color: #776e65; } /* Lightest */
 .tile-4 { background: #ede0c8; color: #776e65; }
-.tile-8 { background: #f2b179; color: #f9f6f2; }
-.tile-16 { background: #f59563; color: #f9f6f2; }
-.tile-32 { background: #f67c5f; color: #f9f6f2; }
-.tile-64 { background: #f65e3b; color: #f9f6f2; }
-.tile-128 { background: #edcf72; color: #f9f6f2; }
-.tile-256 { background: #edcc61; color: #f9f6f2; }
-.tile-512 { background: #edc850; color: #f9f6f2; }
-.tile-1024 { background: #edc53f; color: #f9f6f2; }
-.tile-2048 { background: #edc22e; color: #f9f6f2; }
+.tile-8 { background: #f2b179; color: #f9f6e3; } /* Orange */
+.tile-16 { background: #f59563; color: #f9f6e3; } /* Darker Orange */
+.tile-32 { background: #f67c5f; color: #f9f6e3; } /* Red-Orange */
+.tile-64 { background: #f65e3b; color: #f9f6e3; } /* Dark Red-Orange */
+.tile-128 { background: #edcf72; color: #f9f6e3; } /* Yellow */
+.tile-256 { background: #edcc61; color: #f9f6e3; } /* Darker Yellow */
+.tile-512 { background: #edc850; color: #f9f6e3; } /* Even Darker Yellow */
+.tile-1024 { background: #edc53f; color: #f9f6e3; } /* Gold */
+.tile-2048 { background: #edc22e; color: #f9f6e3; } /* Dark Gold */
+.tile-4096 { background: #6c71c4; color: #f9f6e3; } /* Purple */
+.tile-8192 { background: #5e64b8; color: #f9f6e3; } /* Darker Purple */
 
 .game-message {
     display: none;
@@ -155,21 +158,29 @@ h1 {
 
 .game-button {
     display: inline-block;
-    background: #8f7a66;
+    background: #268bd2; /* Blue for buttons */
     border-radius: 3px;
-    padding: 8px 12px; /* Adjusted padding */
+    padding: 8px 12px;
     text-decoration: none;
-    color: #f9f6f2;
+    color: #fdf6e3; /* Light cream text */
     cursor: pointer;
     border: none;
     font-weight: bold;
-    font-size: 16px; /* Adjusted font size */
-    flex-grow: 1; /* Allow them to grow */
-    text-align: center; /* Center text in button */
+    font-size: 16px;
+    flex-grow: 1;
+    text-align: center;
 }
 
 .game-button:hover {
-    background: #9f8b7a;
+    background: #2a7fb8; /* Darker blue on hover */
+}
+
+.ai-mode-button {
+    background: #859900; /* Solarized green */
+}
+
+.ai-mode-button:hover {
+    background: #657b83; /* Darker green/grey on hover */
 }
 
 

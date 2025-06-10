@@ -66,6 +66,7 @@ beforeEach(() => {
                 <div>Best: <span id="best">0</span></div>
             </div>
             <button class="restart-game-button">Restart Game</button>
+            <button class="ai-mode-button">AI Mode</button>
         </div>
         <div class="game-message">
             <p></p>
