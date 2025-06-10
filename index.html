@@ -7,39 +7,41 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="game-container">
-        <div class="game-header">
-            <div class="score-container">
-                <div>Score: <span id="score">0</span></div>
+    <div class="game-outer-container">
+        <div class="game-inner-container">
+            <div class="game-header">
+                <div class="score-container">
+                    <div>Score: <span id="score">0</span></div>
+                </div>
+                <div class="best-container">
+                    <div>Best: <span id="best">0</span></div>
+                </div>
+                <button class="restart-game-button game-button">Restart Game</button>
+                <button class="ai-mode-button game-button">AI Mode</button>
             </div>
-            <div class="best-container">
-                <div>Best: <span id="best">0</span></div>
+            <div class="game-message">
+                <p></p>
+                <button class="retry-button">New Game</button>
             </div>
-            <button class="restart-game-button game-button">Restart Game</button>
-            <button class="ai-mode-button game-button">AI Mode</button>
+            <div class="grid-container">
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+                <div class="grid-cell"></div>
+            </div>
         </div>
-        <div class="game-message">
-            <p></p>
-            <button class="retry-button">New Game</button>
-        </div>
-        <div class="grid-container">
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-    <div class="grid-cell"></div>
-</div>
     </div>
     <script type="module" src="game.js"></script>
 </body>

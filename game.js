@@ -52,6 +52,51 @@ function initializeGame() {
         retryButton.addEventListener('click', initializeGame);
         alwaysVisibleRestartButton.addEventListener('click', initializeGame);
         aiModeButton.addEventListener('click', toggleAiMode);
+
+        let touchstartX = 0;
+        let touchstartY = 0;
+        let touchendX = 0;
+        let touchendY = 0;
+
+        gridContainer.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+            touchstartY = e.changedTouches[0].screenY;
+        }, false);
+
+        gridContainer.addEventListener('touchmove', e => {
+            e.preventDefault();
+        }, { passive: false });
+
+        gridContainer.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            touchendY = e.changedTouches[0].screenY;
+            handleGesture();
+        }, false);
+
+        function handleGesture() {
+            const deltaX = touchendX - touchstartX;
+            const deltaY = touchendY - touchstartY;
+
+            const minSwipeDistance = 30; // Minimum distance for a swipe to be registered
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) { // Horizontal swipe
+                if (Math.abs(deltaX) > minSwipeDistance) {
+                    if (deltaX > 0) {
+                        moveTiles('right');
+                    } else {
+                        moveTiles('left');
+                    }
+                }
+            } else { // Vertical swipe
+                if (Math.abs(deltaY) > minSwipeDistance) {
+                    if (deltaY > 0) {
+                        moveTiles('down');
+                    } else {
+                        moveTiles('up');
+                    }
+                }
+            }
+        }
         listenersAttached = true;
     }
 
