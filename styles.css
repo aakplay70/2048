@@ -125,7 +125,7 @@ h1 {
     justify-content: center;
     top: 0;
     left: 0;
-    transition: transform 0.1s ease-in-out;
+    transition: transform 0.15s ease-out;
 }
 
 .tile-new {
