@@ -6,38 +6,40 @@
  * @returns {string[]} Merged tiles
  */
 function mergeTiles(tiles) {
-  // Filter out empty tiles
-  const nonEmptyTiles = tiles.filter(tile => tile !== '0');
-  const mergedTiles = [];
-  
-  // If no tiles to merge, return all zeros
-  if (nonEmptyTiles.length === 0) {
-    return { merged: ['0', '0', '0', '0'], score: 0 };
-  }
-  
-  let score = 0;
-  let i = 0;
-  
-  while (i < nonEmptyTiles.length) {
-    // If current and next tiles are the same and not zero, merge them
-    if (i + 1 < nonEmptyTiles.length && nonEmptyTiles[i] === nonEmptyTiles[i + 1]) {
-      const mergedValue = (parseInt(nonEmptyTiles[i]) * 2).toString();
-      score += parseInt(mergedValue);
-      mergedTiles.push(mergedValue);
-      i += 2; // Skip the next tile as it's been merged
-    } else {
-      // Just add the current tile
-      mergedTiles.push(nonEmptyTiles[i]);
-      i++;
+    const actions = [];
+    let score = 0;
+    const nonEmptyTiles = tiles.map((value, index) => ({ value, originalIndex: index }))
+                             .filter(tile => tile.value !== '0');
+
+    const mergedLine = [];
+    for (let i = 0; i < nonEmptyTiles.length; i++) {
+        if (i + 1 < nonEmptyTiles.length && nonEmptyTiles[i].value === nonEmptyTiles[i + 1].value) {
+            const mergedValue = (parseInt(nonEmptyTiles[i].value) * 2).toString();
+            score += parseInt(mergedValue);
+
+            const fromIndex1 = nonEmptyTiles[i].originalIndex;
+            const fromIndex2 = nonEmptyTiles[i + 1].originalIndex;
+            const toIndex = mergedLine.length;
+
+            actions.push({ from: fromIndex1, to: toIndex, value: nonEmptyTiles[i].value, isMerge: true });
+            actions.push({ from: fromIndex2, to: toIndex, value: nonEmptyTiles[i + 1].value, isMerge: true });
+
+            mergedLine.push(mergedValue);
+            i++; // Skip next tile
+        } else {
+            const fromIndex = nonEmptyTiles[i].originalIndex;
+            const toIndex = mergedLine.length;
+            actions.push({ from: fromIndex, to: toIndex, value: nonEmptyTiles[i].value, isMerge: false });
+            mergedLine.push(nonEmptyTiles[i].value);
+        }
     }
-  }
-  
-  // Fill the rest with empty tiles
-  while (mergedTiles.length < 4) {
-    mergedTiles.push('0');
-  }
-  
-  return { merged: mergedTiles, score };
+
+    const finalTiles = [...mergedLine];
+    while (finalTiles.length < 4) {
+        finalTiles.push('0');
+    }
+
+    return { merged: finalTiles, score, actions };
 }
 
 
@@ -49,54 +51,50 @@ function mergeTiles(tiles) {
  * @returns {string[]} New game state after the move
  */
 function performMove(matrix, direction) {
-  const newMatrix = [...matrix];
-  let totalScore = 0;
-  
-  // Process each row or column based on direction
-  for (let i = 0; i < 4; i++) {
-    let tiles = [];
-    let indices = [];
-    
-    // Extract the row or column and remember their original indices
-    for (let j = 0; j < 4; j++) {
-      let index;
-      switch (direction) {
-        case 'left':
-          // Left: process left to right
-          index = i * 4 + j;
-          break;
-        case 'right':
-          // Right: process right to left
-          index = i * 4 + (3 - j);
-          break;
-        case 'up':
-          // Up: process top to bottom
-          index = j * 4 + i;
-          break;
-        case 'down':
-          // Down: process bottom to top
-          index = (3 - j) * 4 + i;
-          break;
-        default:
-          return { newMatrix, scoreChange: 0 };
-      }
-      tiles.push(newMatrix[index]);
-      indices.push(index);
+    const newMatrix = Array(16).fill('0');
+    let totalScore = 0;
+    const allActions = [];
+    let hasChanged = false;
+
+    for (let i = 0; i < 4; i++) {
+        let line = [];
+        let indices = [];
+
+        for (let j = 0; j < 4; j++) {
+            let index;
+            switch (direction) {
+                case 'left': index = i * 4 + j; break;
+                case 'right': index = i * 4 + (3 - j); break;
+                case 'up': index = j * 4 + i; break;
+                case 'down': index = (3 - j) * 4 + i; break;
+            }
+            line.push(matrix[index]);
+            indices.push(index);
+        }
+
+        const { merged, score, actions } = mergeTiles(line);
+        totalScore += score;
+
+        actions.forEach(action => {
+            allActions.push({
+                from: indices[action.from],
+                to: indices[action.to],
+                value: action.value,
+                isMerge: action.isMerge
+            });
+        });
+
+        for (let j = 0; j < 4; j++) {
+            newMatrix[indices[j]] = merged[j];
+        }
     }
-    
-    // Process the tiles (merge and move)
-    const result = mergeTiles(tiles);
-    
-    // Update the total score
-    totalScore += result.score;
-    
-    // Put the processed tiles back in their original positions
-    for (let j = 0; j < 4; j++) {
-      newMatrix[indices[j]] = result.merged[j];
+
+    // Check if the board has changed
+    if (JSON.stringify(matrix) !== JSON.stringify(newMatrix)) {
+        hasChanged = true;
     }
-  }
-  
-  return { newMatrix, scoreChange: totalScore };
+
+    return { newMatrix, scoreChange: totalScore, actions: allActions, hasChanged };
 }
 
 export { mergeTiles, performMove };

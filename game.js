@@ -15,6 +15,7 @@ import {
 let score = 0;
 let bestScore = localStorage.getItem('bestScore') || 0;
 let gameWon = false;
+let isMoving = false; // Flag to prevent input during animation
 
 // DOM elements
 let gridContainer;
@@ -154,6 +155,7 @@ function addNewTile() {
 }
 
 function handleKeyPress(e) {
+    if (isMoving) return;
     const direction = {
         ArrowUp: 'up',
         ArrowDown: 'down',
@@ -162,70 +164,125 @@ function handleKeyPress(e) {
     }[e.key];
     
     if (direction) {
+        e.preventDefault();
         moveTiles(direction);
     }
 }
 
-function moveTiles(direction) {
-    const cells = Array.from(document.querySelectorAll('.grid-cell'));
-    const matrix = cells.map(cell => cell.querySelector('.tile')?.textContent || '0');
-    const { newMatrix, scoreChange } = performMove(matrix, direction);
-    
-    if (matrix.join('') === newMatrix.join('')) return;
-    
-    // Update the grid
-    cells.forEach((cell, i) => {
-        const tile = cell.querySelector('.tile');
-        const value = newMatrix[i];
-        
-        if (value === '0') {
-            if (tile) cell.removeChild(tile);
-        } else {
-            if (!tile) {
-                const newTile = document.createElement('div');
-                newTile.className = `tile tile-${value}`;
-                newTile.textContent = value;
-                cell.appendChild(newTile);
-            } else {
-                tile.textContent = value;
-                tile.className = `tile tile-${value}`;
-            }
-        }
-    });
-    
-    // Add new tile
-    addNewTile();
-    
-    // Update score
+async function moveTiles(direction) {
+    if (isMoving) return;
+    isMoving = true;
+
+    const matrix = getBoardMatrix();
+    const { newMatrix, scoreChange, actions, hasChanged } = performMove(matrix, direction);
+
+    if (!hasChanged) {
+        isMoving = false;
+        return;
+    }
+
+    await animateMovement(actions);
+    renderGrid(newMatrix);
+
     score += scoreChange;
     scoreElement.textContent = score;
-    
-    // Update best score
     if (score > bestScore) {
         bestScore = score;
         bestScoreElement.textContent = bestScore;
         localStorage.setItem('bestScore', bestScore);
     }
-    
-    // Check for win condition
-    if (newMatrix.some(tileValue => parseInt(tileValue) >= 2048) && !gameWon) {
+
+    addNewTile();
+    checkGameState(newMatrix);
+
+    isMoving = false;
+}
+
+function renderGrid(matrix) {
+    gridContainer.innerHTML = '';
+    for (let i = 0; i < 16; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        if (matrix[i] !== '0') {
+            const tile = document.createElement('div');
+            tile.className = `tile tile-${matrix[i]}`;
+            tile.textContent = matrix[i];
+            cell.appendChild(tile);
+        }
+        gridContainer.appendChild(cell);
+    }
+}
+
+function animateMovement(actions) {
+    // Phase 1: Read all DOM properties to avoid layout thrashing
+    const gridRect = gridContainer.getBoundingClientRect();
+    const cellRects = Array.from(gridContainer.children).map(cell => cell.getBoundingClientRect());
+    const originalTiles = gridContainer.querySelectorAll('.tile');
+
+    // Phase 2: Prepare animation layer and tiles in memory
+    const animationLayer = document.createElement('div');
+    animationLayer.style.position = 'absolute';
+    animationLayer.style.top = '0';
+    animationLayer.style.left = '0';
+    animationLayer.style.width = `${gridRect.width}px`;
+    animationLayer.style.height = `${gridRect.height}px`;
+    animationLayer.style.pointerEvents = 'none';
+
+    const movingTilesData = [];
+
+    const animationPromises = actions.map(action => {
+        return new Promise(resolve => {
+            const { from, to, value } = action;
+            const fromRect = cellRects[from];
+            const toRect = cellRects[to];
+
+            const tile = document.createElement('div');
+            tile.className = `tile tile-${value}`;
+            tile.textContent = value;
+            tile.style.width = `${fromRect.width}px`;
+            tile.style.height = `${fromRect.height}px`;
+            tile.style.position = 'absolute';
+            tile.style.top = `${fromRect.top - gridRect.top}px`;
+            tile.style.left = `${fromRect.left - gridRect.left}px`;
+
+            animationLayer.appendChild(tile);
+            movingTilesData.push({ tile, fromRect, toRect });
+
+            tile.addEventListener('transitionend', resolve, { once: true });
+        });
+    });
+
+    // Phase 3: Write to DOM
+    originalTiles.forEach(t => { t.style.visibility = 'hidden'; });
+    gridContainer.appendChild(animationLayer);
+
+    // Phase 4: Animate
+    requestAnimationFrame(() => {
+        movingTilesData.forEach(({ tile, fromRect, toRect }) => {
+            tile.classList.add('tile-moving');
+            tile.style.transform = `translate(${toRect.left - fromRect.left}px, ${toRect.top - fromRect.top}px)`;
+        });
+    });
+
+    // Phase 5: Cleanup
+    return Promise.all(animationPromises).then(() => {
+        // Show all tiles again
+        originalTiles.forEach(t => { t.style.visibility = 'visible'; });
+        gridContainer.removeChild(animationLayer);
+    });
+}
+
+function checkGameState(matrix) {
+    if (!matrix) {
+        matrix = getBoardMatrix();
+    }
+    if (!gameWon && matrix.some(tileValue => parseInt(tileValue) >= 2048)) {
         gameWon = true;
         gameMessage.querySelector('p').textContent = 'You win!';
         gameMessage.classList.add('game-won');
-        document.querySelector('.keep-playing-button').style.display = 'block';
-        // Stop AI when player wins
-        if (aiPlaying) {
-            clearInterval(aiInterval);
-        }
-    }
-    
-    // Check game over condition
-    checkGameState();
-}
-
-function checkGameState() {
-    const matrix = getBoardMatrix();
-    if (!matrix.includes('0') && !canMerge(matrix)) {
+        keepPlayingButton.style.display = 'block';
+        if (aiPlaying) clearInterval(aiInterval);
+    } else if (!matrix.includes('0') && !canMerge(matrix)) {
         gameMessage.querySelector('p').textContent = 'Game Over!';
         gameMessage.classList.add('game-over');
     }
@@ -282,4 +339,14 @@ function aiPlay() {
         aiModeButton.textContent = 'AI Mode';
         console.log("AI stopped: Game Over.");
     }
+}
+
+// Expose functions to global scope for testing, if running in a browser environment
+if (typeof window !== 'undefined') {
+    window.initializeGame = initializeGame;
+    window.addNewTile = addNewTile;
+    window.moveTiles = moveTiles;
+    window.checkGameState = checkGameState;
+    window.getBoardMatrix = getBoardMatrix;
+    window.animateMovement = animateMovement; // Expose for testing
 }

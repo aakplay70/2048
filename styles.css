@@ -125,7 +125,24 @@ h1 {
     justify-content: center;
     top: 0;
     left: 0;
-    transition: all 0.3s ease;
+    transition: transform 0.1s ease-in-out;
+}
+
+.tile-new {
+    animation: new-tile-animation 0.2s ease-in-out;
+}
+
+.tile-moving {
+    z-index: 10;
+}
+
+@keyframes new-tile-animation {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
 }
 
 /* Modern Tile Colors */
