@@ -144,34 +144,62 @@ h1 {
 .tile-8192 { background: #5e64b8; color: #f9f6e3; } /* Darker Purple */
 
 .game-message {
-    display: none;
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background: rgba(238, 228, 218, 0.7);
-    z-index: 100;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(238, 228, 218, 0.5);
+  z-index: 100;
+  text-align: center;
+  -webkit-animation:-webkit-fade-in 200ms ease-in-out;
+  -moz-animation:-moz-fade-in 200ms ease-in-out;
+  animation:fade-in 200ms ease-in-out;
+  -webkit-animation-fill-mode:forwards;
+  -moz-animation-fill-mode:forwards;
+  animation-fill-mode:forwards;
 }
 
 .game-message.game-over {
-    display: flex;
+    display: block;
+    background: rgba(238, 228, 218, 0.73);
+    color: #776e65;
+}
+
+.game-message.game-won {
+    display: block;
+    background: rgba(237, 194, 46, 0.5);
+    color: #f9f6f2;
 }
 
 .game-message p {
-    font-size: 60px;
-    font-weight: bold;
-    margin: 0;
+  font-size: 60px;
+  font-weight: bold;
+  height: 60px;
+  line-height: 60px;
+  margin-top: 222px;
 }
 
-.restart-button {
-    display: inline-block;
-    background: #8f7a66;
-    border-radius: 3px;
-    padding: 0 20px;
+.game-message .lower {
+  display: block;
+  margin-top: 59px;
+}
+
+.game-message a {
+  display: inline-block;
+  background: #8f7a66;
+  border-radius: 3px;
+  padding: 0 20px;
+  text-decoration: none;
+  color: #f9f6f2;
+  height: 40px;
+  line-height: 42px;
+  margin-left: 9px;
+}
+
+.game-message .keep-playing-button {
+  display: none;
 }
 
 .game-button {

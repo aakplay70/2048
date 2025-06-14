@@ -26,6 +26,7 @@ let alwaysVisibleRestartButton;
 let aiModeButton;
 
 let listenersAttached = false;
+let keepPlayingButton;
 
 // Export for testing
 export { 
@@ -34,7 +35,8 @@ export {
     moveTiles,
     performMove,
     mergeTiles, 
-    checkGameState 
+    checkGameState,
+    keepPlaying
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -50,6 +52,7 @@ function initializeGame() {
     retryButton = document.querySelector('.retry-button');
     alwaysVisibleRestartButton = document.querySelector('.restart-game-button');
     aiModeButton = document.querySelector('.ai-mode-button');
+    keepPlayingButton = document.querySelector('.keep-playing-button');
 
     // Attach event listeners only once
     if (!listenersAttached) {
@@ -57,6 +60,7 @@ function initializeGame() {
         retryButton.addEventListener('click', initializeGame);
         alwaysVisibleRestartButton.addEventListener('click', initializeGame);
         aiModeButton.addEventListener('click', toggleAiMode);
+        keepPlayingButton.addEventListener('click', keepPlaying);
 
         let touchstartX = 0;
         let touchstartY = 0;
@@ -124,7 +128,7 @@ function initializeGame() {
     
     addNewTile();
     addNewTile();
-    gameMessage.style.display = 'none';
+    gameMessage.className = 'game-message';
 }
 
 function addNewTile() {
@@ -204,10 +208,15 @@ function moveTiles(direction) {
     }
     
     // Check for win condition
-    if (newMatrix.some(tile => tile === '2048') && !gameWon) {
+    if (newMatrix.some(tileValue => parseInt(tileValue) >= 2048) && !gameWon) {
         gameWon = true;
-        gameMessage.querySelector('p').textContent = 'You Won!';
-        gameMessage.style.display = 'flex';
+        gameMessage.querySelector('p').textContent = 'You win!';
+        gameMessage.classList.add('game-won');
+        document.querySelector('.keep-playing-button').style.display = 'block';
+        // Stop AI when player wins
+        if (aiPlaying) {
+            clearInterval(aiInterval);
+        }
     }
     
     // Check game over condition
@@ -215,26 +224,20 @@ function moveTiles(direction) {
 }
 
 function checkGameState() {
-    const cells = Array.from(document.querySelectorAll('.grid-cell'));
-    const matrix = cells.map(cell => cell.querySelector('.tile')?.textContent || '0');
-    
-    // Check if there are any empty cells
-    if (matrix.includes('0')) return;
-    
-    // Check if any adjacent tiles can be merged
-    for (let i = 0; i < 16; i++) {
-        const value = matrix[i];
-        if (value === '0') continue;
-        
-        // Check right
-        if (i % 4 !== 3 && value === matrix[i + 1]) return;
-        // Check down
-        if (i < 12 && value === matrix[i + 4]) return;
+    const matrix = getBoardMatrix();
+    if (!matrix.includes('0') && !canMerge(matrix)) {
+        gameMessage.querySelector('p').textContent = 'Game Over!';
+        gameMessage.classList.add('game-over');
     }
-    
-    // Game over
-    gameMessage.querySelector('p').textContent = 'Game Over!';
-    gameMessage.style.display = 'flex';
+}
+
+function keepPlaying() {
+    gameMessage.classList.remove('game-won');
+    document.querySelector('.keep-playing-button').style.display = 'none';
+    // Resume AI if it was running
+    if (aiPlaying) {
+        aiInterval = setInterval(aiPlay, 500);
+    }
 }
 
 function getBoardMatrix() {

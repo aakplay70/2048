@@ -70,7 +70,10 @@ beforeEach(() => {
         </div>
         <div class="game-message">
             <p></p>
-            <button class="retry-button">New Game</button>
+            <div class="lower">
+                <a class="keep-playing-button">Keep going</a>
+                <a class="retry-button">Try again</a>
+            </div>
         </div>
         <div class="grid-container"></div>
     </div>
