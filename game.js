@@ -248,7 +248,19 @@ function animateMovement(actions) {
             animationLayer.appendChild(tile);
             movingTilesData.push({ tile, fromRect, toRect });
 
-            tile.addEventListener('transitionend', resolve, { once: true });
+            let eventFired = false;
+            const transitionDuration = 150; // Must match CSS: transition: transform 0.15s
+            const safetyMargin = 50; // ms
+
+            const onEnd = () => {
+                if (!eventFired) {
+                    eventFired = true;
+                    resolve();
+                }
+            };
+
+            tile.addEventListener('transitionend', onEnd, { once: true });
+            setTimeout(onEnd, transitionDuration + safetyMargin); // Fallback timeout
         });
     });
 
