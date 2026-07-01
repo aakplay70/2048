@@ -67,6 +67,7 @@ function performMove(matrix, direction) {
                 case 'right': index = i * 4 + (3 - j); break;
                 case 'up': index = j * 4 + i; break;
                 case 'down': index = (3 - j) * 4 + i; break;
+                default: throw new Error(`Invalid direction: ${direction}`);
             }
             line.push(matrix[index]);
             indices.push(index);
