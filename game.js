@@ -323,7 +323,7 @@ function checkGameState(matrix) {
         gameWon = true;
         gameMessage.querySelector('p').textContent = 'You win!';
         gameMessage.classList.add('game-won');
-        keepPlayingButton.style.display = 'block';
+        keepPlayingButton.style.display = 'inline-block';
         // Pause (not stop) so "Keep going" can resume AI mode without a re-toggle.
         pauseAiInterval();
     } else if (!matrix.includes('0') && !canMerge(matrix)) {
