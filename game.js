@@ -13,9 +13,10 @@ import {
 // Game variables
 
 let score = 0;
-let bestScore = localStorage.getItem('bestScore') || 0;
+let bestScore = Number(localStorage.getItem('bestScore')) || 0;
 let gameWon = false;
 let isMoving = false; // Flag to prevent input during animation
+let moveToken = 0; // Bumped on restart to invalidate any in-flight move
 
 // DOM elements
 let gridContainer;
@@ -110,14 +111,19 @@ function initializeGame() {
         listenersAttached = true;
     }
 
+    // Invalidate any move that's still animating from before this restart,
+    // and unblock input immediately rather than waiting for it to finish.
+    moveToken++;
+    isMoving = false;
+
     score = 0;
     scoreElement.textContent = score;
     bestScoreElement.textContent = bestScore;
     gameWon = false;
-    
+
     // Clear existing tiles
     gridContainer.innerHTML = '';
-    
+
     // Create empty grid
     for (let i = 0; i < 4; i++) {
         for (let j = 0; j < 4; j++) {
@@ -126,10 +132,16 @@ function initializeGame() {
             gridContainer.appendChild(cell);
         }
     }
-    
+
     addNewTile();
     addNewTile();
     gameMessage.className = 'game-message';
+
+    // Re-sync the AI interval with the toggle state (it may have been paused by a win).
+    pauseAiInterval();
+    if (aiPlaying) {
+        aiInterval = setInterval(aiPlay, 500);
+    }
 }
 
 function addNewTile() {
@@ -172,6 +184,7 @@ function handleKeyPress(e) {
 async function moveTiles(direction) {
     if (isMoving) return;
     isMoving = true;
+    const currentToken = moveToken;
 
     const matrix = getBoardMatrix();
     const { newMatrix, scoreChange, actions, hasChanged } = performMove(matrix, direction);
@@ -181,7 +194,22 @@ async function moveTiles(direction) {
         return;
     }
 
-    await animateMovement(actions);
+    try {
+        await animateMovement(actions);
+    } finally {
+        // Only release the input lock if a restart hasn't already done so and
+        // taken over move ownership (see moveToken in initializeGame).
+        if (currentToken === moveToken) {
+            isMoving = false;
+        }
+    }
+
+    if (currentToken !== moveToken) {
+        // The game was restarted while this move was animating; discard the
+        // stale result instead of overwriting the freshly initialized board.
+        return;
+    }
+
     renderGrid(newMatrix);
 
     score += scoreChange;
@@ -194,8 +222,6 @@ async function moveTiles(direction) {
 
     addNewTile();
     checkGameState(newMatrix);
-
-    isMoving = false;
 }
 
 function renderGrid(matrix) {
@@ -280,7 +306,12 @@ function animateMovement(actions) {
     return Promise.all(animationPromises).then(() => {
         // Show all tiles again
         originalTiles.forEach(t => { t.style.visibility = 'visible'; });
-        gridContainer.removeChild(animationLayer);
+        // A restart may have already wiped the grid (and this animation layer
+        // with it) while this move was still animating; guard against that
+        // instead of throwing on a detached node.
+        if (animationLayer.parentNode) {
+            animationLayer.parentNode.removeChild(animationLayer);
+        }
     });
 }
 
@@ -293,10 +324,12 @@ function checkGameState(matrix) {
         gameMessage.querySelector('p').textContent = 'You win!';
         gameMessage.classList.add('game-won');
         keepPlayingButton.style.display = 'block';
-        if (aiPlaying) clearInterval(aiInterval);
+        // Pause (not stop) so "Keep going" can resume AI mode without a re-toggle.
+        pauseAiInterval();
     } else if (!matrix.includes('0') && !canMerge(matrix)) {
         gameMessage.querySelector('p').textContent = 'Game Over!';
         gameMessage.classList.add('game-over');
+        stopAiMode();
     }
 }
 
@@ -317,11 +350,25 @@ function getBoardMatrix() {
 let aiPlaying = false;
 let aiInterval;
 
+// Clears the interval only; leaves aiPlaying/button state untouched so a
+// paused AI (e.g. on win) can be resumed later via keepPlaying/initializeGame.
+function pauseAiInterval() {
+    if (aiInterval) {
+        clearInterval(aiInterval);
+        aiInterval = null;
+    }
+}
+
+// Fully turns AI mode off, e.g. on game over or manual toggle-off.
+function stopAiMode() {
+    pauseAiInterval();
+    aiPlaying = false;
+    aiModeButton.textContent = 'AI Mode';
+}
+
 function toggleAiMode() {
     if (aiPlaying) {
-        clearInterval(aiInterval);
-        aiPlaying = false;
-        aiModeButton.textContent = 'AI Mode';
+        stopAiMode();
     } else {
         aiPlaying = true;
         aiModeButton.textContent = 'Stop AI';
@@ -329,28 +376,21 @@ function toggleAiMode() {
     }
 }
 
-function aiPlay() {
+async function aiPlay() {
     const currentMatrix = getBoardMatrix();
     const bestMove = findBestMove(currentMatrix);
 
-    if (bestMove) {
-        moveTiles(bestMove);
-    } else {
-        // If no move found, stop AI
-        clearInterval(aiInterval);
-        aiPlaying = false;
-        aiModeButton.textContent = 'AI Mode';
+    if (!bestMove) {
+        stopAiMode();
         console.log("AI stopped: No valid moves found.");
+        return;
     }
 
-    // Check for game over after move
-    const matrixAfterMove = getBoardMatrix();
-    if (!matrixAfterMove.includes('0') && !canMerge(matrixAfterMove)) {
-        clearInterval(aiInterval);
-        aiPlaying = false;
-        aiModeButton.textContent = 'AI Mode';
-        console.log("AI stopped: Game Over.");
-    }
+    // Wait for the move (including its animation) to fully apply before the
+    // next interval tick reads the board again; checkGameState (run inside
+    // moveTiles) is the single source of truth for win/game-over handling,
+    // including stopping AI mode on a real game over.
+    await moveTiles(bestMove);
 }
 
 // Expose functions to global scope for testing, if running in a browser environment
@@ -361,4 +401,6 @@ if (typeof window !== 'undefined') {
     window.checkGameState = checkGameState;
     window.getBoardMatrix = getBoardMatrix;
     window.animateMovement = animateMovement; // Expose for testing
+    window.toggleAiMode = toggleAiMode; // Expose for testing
+    window.keepPlaying = keepPlaying; // Expose for testing
 }

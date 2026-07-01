@@ -23,15 +23,15 @@ function evaluateBoard(matrix) {
     // 2. Largest Tile Position: Prioritize top-left corner
     const maxTileValue = Math.max(...matrix.map(Number));
     const topLeftTile = Number(board2D[0][0]);
+    const cornerIndices = [0, 3, 12, 15];
+    const maxTileInCorner = cornerIndices.some(idx => Number(matrix[idx]) === maxTileValue);
     if (topLeftTile === maxTileValue) {
         score += 2000; // Significant bonus for largest tile in top-left
-    } else {
-        // Penalize if largest tile is not in a corner, or is in a bad position
-        // This is a simplified approach, could be more nuanced
-        const maxTileIndex = matrix.indexOf(String(maxTileValue));
-        if (maxTileIndex !== 0 && maxTileIndex !== 3 && maxTileIndex !== 12 && maxTileIndex !== 15) {
-             score -= 500; // Penalize if largest tile is not in any corner
-        }
+    } else if (!maxTileInCorner) {
+        // Penalize only if no corner (not just top-left) holds the largest
+        // tile; checking every corner (rather than the first indexOf match)
+        // avoids misjudging boards with duplicate max-value tiles.
+        score -= 500;
     }
 
 
@@ -152,8 +152,16 @@ function expectimax(matrix, depth, isPlayerTurn) {
             return evaluateBoard(matrix);
         }
 
+        // Sampling keeps the branching factor bounded on sparse boards, where
+        // evaluating every empty cell at each ply would make the search too
+        // slow to finish within the AI's move interval.
+        const maxSampledCells = 4;
+        const sampledCells = emptyCells.length <= maxSampledCells
+            ? emptyCells
+            : emptyCells.slice(0, maxSampledCells);
+
         let totalScore = 0;
-        for (const cellIndex of emptyCells) {
+        for (const cellIndex of sampledCells) {
             // Possibility 1: a '2' appears (90% chance)
             const matrixWith2 = [...matrix];
             matrixWith2[cellIndex] = '2';
@@ -164,7 +172,7 @@ function expectimax(matrix, depth, isPlayerTurn) {
             matrixWith4[cellIndex] = '4';
             totalScore += 0.1 * expectimax(matrixWith4, depth - 1, true);
         }
-        return totalScore / emptyCells.length; // Average score over all possible tile placements
+        return totalScore / sampledCells.length; // Average score over sampled tile placements
     }
 }
 
